@@ -1,0 +1,11 @@
+id: sleep
+namespace: kestra.learn
+
+tasks:
+  - id: wait
+    type: io.kestra.plugin.scripts.python.Script
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    script: |
+      import time
+      time.sleep(60)

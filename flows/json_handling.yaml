@@ -1,0 +1,52 @@
+id: json_handling
+namespace: kestra.learn
+ 
+inputs:
+  - id: input_json
+    type: JSON
+    defaults: |
+      {
+        "data": {
+            "taskName": "allocate_vms",
+            "rollback": "yes",
+            "rerun": "no",
+            "hostList": ["server1", "server2"],
+            "data": [
+              {
+                "status": "success",
+                "reservationName": "APP-DB",
+                "hostList": ["server1"]
+              },
+              {
+                "status": "success",
+                "reservationName": "APP-CORE",
+                "hostList": ["server2"]
+              }
+            ]
+          },
+          "message": "VM allocated",
+          "timestamp": "2024-12-03T11:13:36.634Z"
+        }
+tasks:
+  - id: fill_output
+    type: io.kestra.plugin.core.debug.Return
+    format: "{{ inputs.input_json }}"
+  - id: print_input
+    type: io.kestra.plugin.core.log.Log
+    message: "{{ json(outputs.fill_output.value).data.hostList }}"
+  - id:  register_vms_to_it
+    type: io.kestra.plugin.core.flow.ForEach
+    concurrencyLimit: 0
+    values: "{{ json(outputs.fill_output.value).data.hostList }}"
+    tasks:
+      - id: register_vm_to_it
+        type: io.kestra.plugin.scripts.python.Script
+        taskRunner:
+          type: io.kestra.plugin.core.runner.Process
+        script: |
+          import time
+          import requests
+          import json
+
+          print ("host: " + "{{ taskrun.value }}")
+          

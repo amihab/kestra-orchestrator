@@ -1,0 +1,46 @@
+id: nodejs_script
+namespace: kestra.learn
+
+inputs:
+  - id: namespace
+    type: STRING
+    required: true
+    defaults: production
+
+variables:
+  envs_service_url: "http://envs-service.NAMESPACE.svc.cluster.local:8791"
+  topology_service_url: "http://topology-service.NAMESPACE.svc.cluster.local:8791"
+
+tasks:
+  - id: flow_params
+    type: io.kestra.plugin.scripts.node.Script
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    beforeCommands:
+      - export http_proxy=http://proxy:8080
+      - export https_proxy=http://proxy:8080
+      - npm install colors
+    script: |
+      const colors = require("colors");
+      console.log(colors.red("Script has started"));
+
+      // handle envs service url
+      let envs_service_url = "{{vars.envs_service_url}}";
+      envs_service_url = envs_service_url.replace("NAMESPACE", "{{inputs.namespace}}");
+
+      // handle topology url
+      let topology_service_url = "{{vars.topology_service_url}}";
+      topology_service_url = topology_service_url.replace("NAMESPACE", "{{inputs.namespace}}");
+
+      // generate Kestra output parameters
+      const data = { "outputs": { "envs_service_url": envs_service_url, "topology_service_url": topology_service_url }};
+      console.log(`::${JSON.stringify(data)}::`);
+      
+      console.log(colors.red("Script has finished"));
+    warningOnStdErr: true
+
+  - id: output
+    type: io.kestra.plugin.core.log.Log
+    message: |
+      envs_service_url: {{outputs.flow_params.vars.envs_service_url}}
+      topology_service_url: {{outputs.flow_params.vars.topology_service_url}}

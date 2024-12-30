@@ -1,0 +1,56 @@
+id: http_request
+namespace: kestra.learn
+
+inputs:
+  - id: user_name
+    type: STRING
+    defaults: amih
+  - id: authorize_service_url
+    type: STRING
+    defaults: http://authorize-service-url:8791
+  - id: configuration_service_url
+    type: STRING
+    defaults: https://configuration-url:8791
+  - id: authorization_token
+    type: STRING
+    defaults: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYWRtaW4iLCJkaXNwbGF5TmFtZSI6IkFkbWluIFVzZXIiLCJyb2xlcyI6WyJFTVNfQURNIiwiRU1TX1ZJRVciXSwiZW1wbG95ZWVJRCI6IjEyMzQ1NiIsIm1haWwiOiJhY2NhZG1AZXhhbXBsZS5jb20iLCJpYXQiOjE3MjYwNTA2NDR9.GWqGa1uXfGWxPLLSHlMCFn8imxbkLyhmMEZR3ntx4Rs"
+
+tasks:
+  - id: get_user_data
+    type: io.kestra.plugin.core.http.Request
+    uri: '{{ inputs.authorize_service_url }}/users/{{ inputs.user_name}}/data'
+    method: GET
+    headers:
+      authorization: 'Bearer {{ inputs.authorization_token }}'
+      content-type: 'application/json'
+    sslOptions:
+        insecureTrustAllCertificates: true
+  - id: print_user_data
+    type: io.kestra.plugin.core.log.Log
+    message: "{{ json(outputs.get_user_data.body).roles }}"
+  - id: get_accounts
+    type: io.kestra.plugin.core.http.Request
+    uri: '{{ inputs.configuration_service_url }}/accounts'
+    method: GET
+    headers:
+      authorization: 'Bearer {{ inputs.authorization_token }}'
+      content-type: 'application/json'
+    sslOptions:
+        insecureTrustAllCertificates: true
+  - id: count_accounts
+    type: io.kestra.plugin.core.log.Log
+    message: "{{ json(outputs.get_accounts.body) | jq('.[]') | length }}"
+  - id: print_first_account
+    type: io.kestra.plugin.core.log.Log
+    message: "{{ json(outputs.get_accounts.body)[0].name }}"
+  - id: print_all_accounts
+    type: io.kestra.plugin.core.flow.ForEach
+    values: '{{ json(outputs.get_accounts.body) }}'
+    tasks:
+      - id: accountName
+        type: io.kestra.plugin.core.debug.Return
+        format: "{{ json(taskrun.value).name }}"
+      - id: accountId
+        type: io.kestra.plugin.core.debug.Return
+        format: "{{ json(taskrun.value).id }}"
+  

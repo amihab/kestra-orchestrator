@@ -1,0 +1,14 @@
+@kestraURL = http://localhost:8080
+@namespace = kestra.learn
+@flowName = subflow
+
+#### Get List of Flows for a Namespace
+GET {{kestraURL}}/api/v1/flows/{{namespace}}
+content-type: application/json
+
+### Execute a Flow
+POST {{kestraURL}}/api/v1/executions/{{namespace}}/{{flowName}}
+Content-Type: multipart/form-data
+
+error_code=500&error_message="Hello World"&data={"name": "John Doe",  "age": 99}
+

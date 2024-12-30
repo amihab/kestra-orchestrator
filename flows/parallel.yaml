@@ -1,0 +1,62 @@
+id: parallel
+namespace: kestra.learn
+
+tasks:
+  - id: parent
+    type: io.kestra.plugin.core.flow.Parallel
+    concurrent: 2
+    tasks:
+      - id: t1
+        type: io.kestra.plugin.core.flow.Parallel
+        tasks:
+          - id: t11
+            type: io.kestra.plugin.scripts.shell.Commands
+            taskRunner:
+              type: io.kestra.plugin.core.runner.Process
+            commands:
+              - 'echo "running {{task.id}}"'
+              - 'sleep 1'
+          - id: t12
+            type: io.kestra.plugin.scripts.shell.Commands
+            taskRunner:
+              type: io.kestra.plugin.core.runner.Process
+            commands:
+              - 'echo "running {{task.id}}"'
+              - 'sleep 1'
+      - id: t2
+        type: io.kestra.plugin.core.flow.Parallel
+        tasks:
+          - id: t21
+            type: io.kestra.plugin.scripts.shell.Commands
+            taskRunner:
+              type: io.kestra.plugin.core.runner.Process
+            commands:
+              - 'echo "running {{task.id}}"'
+              - 'sleep 1'
+          - id: t22
+            type: io.kestra.plugin.scripts.shell.Commands
+            taskRunner:
+              type: io.kestra.plugin.core.runner.Process
+            commands:
+              - 'echo "running {{task.id}}"'
+              - 'sleep 1'
+      - id: t3
+        type: io.kestra.plugin.core.flow.Parallel
+        tasks:
+          - id: t31
+            type: io.kestra.plugin.scripts.shell.Commands
+            taskRunner:
+              type: io.kestra.plugin.core.runner.Process
+            commands:
+              - 'echo "running {{task.id}}"'
+              - 'sleep 1'
+          - id: t32
+            type: io.kestra.plugin.scripts.shell.Commands
+            taskRunner:
+              type: io.kestra.plugin.core.runner.Process
+            commands:
+              - 'echo "running {{task.id}}"'
+              - 'sleep 1'
+  - id: last
+    type: io.kestra.plugin.core.debug.Return
+    format: "{{task.id}} > {{taskrun.startDate}}"

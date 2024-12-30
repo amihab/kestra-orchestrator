@@ -1,0 +1,31 @@
+id: wait_for_kestra
+namespace: mdocs.kestra.learn
+
+variables:
+  kestra_url: "http://localhost:8081"
+  kestra_ns: "kestra.learn"
+  kestra_flow_id: "sleep"
+
+tasks:
+  - id: execute_flow
+    type: io.kestra.plugin.core.http.Request
+    uri: "{{ vars.kestra_url }}/api/v1/executions/{{ vars.kestra_ns }}/{{ vars.kestra_flow_id }}"
+    method: POST
+  
+  - id: wait_for_flow
+    type: io.kestra.plugin.core.flow.WaitFor
+    failOnMaxReached: true
+    checkFrequency: 
+      maxIterations: 100
+      maxDuration: 3600
+      interval: 20
+    condition: "{{ json(outputs.check_status.body).state.current == 'SUCCESS' }}"
+    tasks:
+      - id: check_status
+        type: io.kestra.plugin.core.http.Request
+        uri: "{{ vars.kestra_url }}/api/v1/executions/{{ json(outputs.execute_flow.body).id }}"
+        method: GET
+  
+  - id: flow_done
+    type: io.kestra.plugin.core.log.Log
+    message: "I am done"

@@ -1,0 +1,31 @@
+id: replace-port-example
+namespace: kestra.learn
+
+inputs:
+  - id: port
+    type: INT
+    defaults: 67666
+
+variables:
+  my_url: "http://host:#port#/init"
+
+tasks:
+  - id: to_upper
+    type: io.kestra.plugin.core.log.Log
+    message: '{{ "article title" | upper }}'
+  - id: init_params
+    type: io.kestra.plugin.core.debug.Return
+    format: |
+      {
+        "url1": "{{ vars.my_url | replace({'#port#': inputs.port}) }}",
+        "url2": "{{ vars.my_url | replace({'#port#': '9999'}) }}"
+      }
+  - id: print_all_params
+    type: io.kestra.plugin.core.log.Log
+    message: "{{ json(outputs.init_params.value) }}"
+  - id: print_url2
+    type: io.kestra.plugin.core.log.Log
+    message: "{{json(outputs.init_params.value).url2}}"
+  - id: print_url1
+    type: io.kestra.plugin.core.log.Log
+    message: "{{ outputs.init_params.value | jq('.url1') | first }}"

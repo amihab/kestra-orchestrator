@@ -1,0 +1,39 @@
+id: macro-example
+namespace: kestra.learn
+
+inputs:
+  - id: category
+    type: STRING
+    defaults: "news"
+
+tasks:
+  - id: log_output2
+    type: io.kestra.plugin.core.debug.Return
+    format: |
+      {% if inputs.category == "news" %}
+         "http://server.domain.com:9088/task/214bad94-9612-42e2-8af8-c158a79d2473"
+      {% elseif inputs.category == "sports" %}
+          "http://server.domain.com:9088/task/c0a0e346-a816-48ef-935d-638d77f168f8"
+      {% else %}
+          "Please select a category"
+      {% endif %}
+
+  - id: log_output3
+    type: io.kestra.plugin.core.debug.Return
+    format: "{{ outputs.log_output2.value }}"
+
+  - id: send_data2
+    type: io.kestra.plugin.core.http.Request
+    uri: "{{ fromJson(outputs.log_output2.value )}}"
+    options:
+      basicAuthUser: "admin"
+      basicAuthPassword: "1234"
+    method: GET
+
+  - id: print_utask
+    type: io.kestra.plugin.core.log.Log
+    message: "{{ outputs.send_data.body }}"
+
+  - id: print_utask_id
+    type: io.kestra.plugin.core.log.Log
+    message: "{{ json(outputs.send_data.body).id }}"

@@ -1,0 +1,42 @@
+id: wait_for_python
+namespace: kestra.learn
+
+variables:
+  kestra_url: "http://localhost:8081"
+  kestra_ns: "kestra.learn"
+  kestra_flow_id: "sleep"
+
+tasks:
+  - id: script
+    type: io.kestra.plugin.scripts.python.Script
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    warningOnStdErr: true
+    script: |
+      import time
+      import requests
+      import json
+
+      iteration = 0
+      exec_url = "{{vars.kestra_url}}/api/v1/executions/{{vars.kestra_ns}}/{{vars.kestra_flow_id}}"
+      print(f"exec_url={exec_url}")
+      response = requests.post(exec_url)
+      if response.status_code == 200:
+        response_data = json.loads(response.text)
+        request_id = response_data["id"]
+      else:
+        print(f"Request failed with status code: {response.status_code}")
+        raise Exception(response.text)
+
+      while True:
+        iteration += 1
+        check_url = f"{{vars.kestra_url}}/api/v1/executions/{request_id}"
+        print(f"check_url={check_url}")
+        response = requests.get(check_url)
+        if response.status_code == 200:
+          response_data = json.loads(response.text)
+          status = response_data["state"]["current"]
+          print(f"Iteration: {iteration}, Status: {status}")
+          if status == "SUCCESS":
+            break
+        time.sleep(20)

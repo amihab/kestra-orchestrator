@@ -1,0 +1,63 @@
+id: kv_store
+namespace: kestra.learn
+
+inputs:
+  - id: name
+    type: STRING
+    defaults: "John Doe"
+    required: true
+  - id: age
+    type: INT
+    defaults: 31
+    required: true
+
+tasks:
+  - id: set_name
+    type: io.kestra.plugin.core.kv.Set
+    key: name
+    value: "{{ inputs.name }}"
+    overwrite: true
+    kvType: STRING
+    namespace: kestra.learn
+
+  - id: set_age
+    type: io.kestra.plugin.core.kv.Set
+    key: age
+    value: "{{ inputs.age }}"
+    kvType: NUMBER
+    overwrite: true
+    namespace: kestra.learn
+  
+  - id: person_as_json
+    type: io.kestra.plugin.core.output.OutputValues
+    values:
+      "name": "{{ inputs.name }}"
+      "age": "{{ inputs.age }}"
+      "created_by": "admin"
+
+  - id: set_both
+    type: io.kestra.plugin.core.kv.Set
+    key: person
+    value: '{{ outputs.person_as_json.values }}'
+    kvType: JSON
+    overwrite: true
+    namespace: kestra.learn
+  
+  - id: get_all
+    type: io.kestra.plugin.core.output.OutputValues
+    values:
+      name: "{{ kv('name') }}"
+      age: "{{ kv('age') }}"
+      person: "{{ kv('person') }}"
+      person-name: "{{ kv('person').name }}"
+      person-age: "{{ kv('person').age }}"
+
+  - id: delete_name
+    type: io.kestra.plugin.core.kv.Delete
+    key: name
+    namespace: kestra.learn
+  - id: delete_age
+    type: io.kestra.plugin.core.kv.Delete
+    key: age
+    namespace: kestra.learn
+  

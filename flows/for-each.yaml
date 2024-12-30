@@ -1,0 +1,42 @@
+id: for_each_loop
+namespace: kestra.learn
+
+inputs:
+  - id: data
+    type: JSON
+    defaults: |
+      [    
+        {
+          "user": "user1",
+          "host": "host1",
+          "ip": "10.0.1.99"
+        },
+        {
+          "user": "user2",
+          "host": "host2",
+          "ip": "10.0.1.88"
+        }
+      ]
+      
+tasks:
+  - id: root
+    type: io.kestra.plugin.core.flow.ForEach
+    values: '{{inputs.data}}'
+    tasks:
+      - id: host
+        type: io.kestra.plugin.core.flow.Parallel
+        tasks:
+          - id: name
+            type: io.kestra.plugin.core.debug.Return
+            format: "{{ json(parent.taskrun.value).host }}"
+          - id: ip
+            type: io.kestra.plugin.core.debug.Return
+            format: "{{ json(parent.taskrun.value).ip }}"
+          - id: user
+            type: io.kestra.plugin.core.debug.Return
+            format: "{{ json(parent.taskrun.value).user }}"
+  - id: end
+    type: io.kestra.plugin.core.output.OutputValues
+    values:
+      taskrun_data: "{{ task.id }} > {{ taskrun.startDate }}"
+      execution_data: "{{ flow.id }} > {{ execution.startDate }}"

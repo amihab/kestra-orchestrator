@@ -1,0 +1,19 @@
+id: if_condition
+namespace: kestra.learn
+
+inputs:
+  - id: param
+    type: BOOLEAN
+
+tasks:
+  - id: if
+    type: io.kestra.plugin.core.flow.If
+    condition: "{{ inputs.param }}"
+    then:
+      - id: when_true
+        type: io.kestra.plugin.core.log.Log
+        message: "This is true"
+    else:
+      - id: when_false
+        type: io.kestra.plugin.core.log.Log
+        message: "This is false"

@@ -1,0 +1,71 @@
+id: error_handling
+namespace: kestra.learn
+ 
+inputs:
+  - id: is_error
+    type: BOOLEAN
+    defaults: true
+  - id: data
+    type: JSON
+    defaults: |
+      [    
+        {
+          "user": "user1",
+          "host": "host1",
+          "ip": "10.0.1.99"
+        },
+        {
+          "user": "user2",
+          "host": "host2",
+          "ip": "10.0.1.88"
+        }
+      ]
+     
+tasks:
+  - id: loop_on_data
+    type: io.kestra.plugin.core.flow.ForEach
+    values: '{{inputs.data}}'
+    tasks:
+      - id: group
+        type: io.kestra.plugin.core.flow.Parallel
+        tasks:
+          - id: t1
+            type: io.kestra.plugin.scripts.shell.Commands
+            commands:
+              - echo '::{"outputs":{"name":"t1","status":"started"}}::'
+              - echo '::{"outputs":{"name":"t1","status":"finished"}}::'
+          - id: t2
+            type: io.kestra.plugin.scripts.shell.Commands
+            commands:
+              - echo '::{"outputs":{"name":"t2","status":"started"}}::'
+              - if [ "{{inputs.is_error}}" = "true" ]; then exit 1; fi
+              - echo '::{"outputs":{"name":"t2","status":"finished"}}::'
+        errors:
+          - id: group_error
+            type: io.kestra.plugin.core.output.OutputValues
+            values: 
+              host: "{{json(parent.taskrun.value).host}}"
+              ip: "{{json(parent.taskrun.value).ip}}"
+              user: "{{json(parent.taskrun.value).user}}"
+    errors:
+      - id: dummy1
+        type: io.kestra.plugin.core.log.Log
+        message: "DEBUG: {{ outputs }}"
+      - id: dummy2
+        type: io.kestra.plugin.core.log.Log
+        message: "DEBUG: {{ outputs.group_error.values.host }}"
+      - id: subflow_call
+        type: io.kestra.plugin.core.flow.Subflow
+        namespace: kestra.learn
+        flowId: subflow
+        wait: true
+        transmitFailed: true
+        inputs:
+          error_message: "The host: {{ outputs.group_error.values.host }} has failed"
+          error_code: 400
+      - id: subflow_output
+        type: io.kestra.plugin.core.log.Log
+        message: "{{ outputs.subflow_call.outputs.final }}"            
+  - id: end
+    type: io.kestra.plugin.core.log.Log
+    message: "Flow has finished successfully"

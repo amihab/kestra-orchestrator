@@ -1,0 +1,25 @@
+id: use_python_output
+namespace: kestra.learn
+
+tasks:
+  - id: script
+    type: io.kestra.plugin.scripts.python.Script
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    warningOnStdErr: false
+    script: |
+      import json
+      from kestra import Kestra
+
+      data = {"name": "Kestra", "version": "1.0.0"}
+      json_data = json.dumps(data)
+      Kestra.outputs({"data": json_data})
+  
+  - id: output
+    type: io.kestra.plugin.core.log.Log
+    message: |
+      "name: {{ json(outputs.script.vars.data).name }}"
+      >>
+      "version: {{ json(outputs.script.vars.data).version }}"
+ 
+    

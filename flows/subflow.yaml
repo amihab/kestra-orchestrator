@@ -1,0 +1,42 @@
+id: subflow
+namespace: kestra.learn
+
+inputs:
+  - id: error_code
+    type: INT
+  - id: error_message
+    type: STRING
+  - id: person
+    type: JSON
+    required: false
+
+tasks:
+  - id: print_error_code
+    type: io.kestra.plugin.core.log.Log
+    message: "error_code: {{inputs.error_code}}"
+  - id: print_error_message
+    type: io.kestra.plugin.core.log.Log
+    message: "error_message: {{inputs.error_message}}"
+  - id: validate_person
+    type: io.kestra.plugin.core.flow.If
+    condition: "{{inputs.person}}"
+    then:
+      - id: when_true
+        type: io.kestra.plugin.core.log.Log
+        message: "Name: {{inputs.person.name}}, Age: {{inputs.person.age}}"
+    else:
+      - id: when_false
+        type: io.kestra.plugin.core.log.Log
+        message: "person parameter not set"
+  - id: sleep_10
+    type: io.kestra.plugin.scripts.shell.Commands
+    commands:
+      - sleep 10
+  - id: bye
+    type: io.kestra.plugin.core.debug.Return
+    format: "Hello from subtask"
+
+outputs:
+  - id: final
+    type: STRING
+    value: "{{outputs.bye.value}}"

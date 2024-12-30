@@ -1,0 +1,39 @@
+id: use_python_output
+namespace: kestra.learn
+
+tasks:
+  - id: script
+    type: io.kestra.plugin.scripts.python.Script
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    warningOnStdErr: false
+    script: |
+      import json
+      from kestra import Kestra
+
+      data = {"app": "Kestra", "version": "1.0.0"}
+      json_data = json.dumps(data)
+      Kestra.outputs({"data": json_data})
+      Kestra.outputs({"name": "David"})
+      Kestra.outputs({"age": 34})
+      Kestra.outputs({"url": "http://example.com:8791"})
+  
+  - id: gen_output
+    type: io.kestra.plugin.core.debug.Return
+    format: |
+      {
+        "address": "Kibbutz Tzora",
+        "zip": "9980300"
+      }
+
+  - id: print_output
+    type: io.kestra.plugin.core.log.Log
+    message: |
+      >>
+      "app: {{ json(outputs.script.vars.data).app }}"
+      "version: {{ json(outputs.script.vars.data).version }}"
+      "url: {{ outputs.script.vars.url }}"
+      "name: {{ outputs.script.vars.name }}"
+      "age: {{ outputs.script.vars.age }}"
+      "address: {{ json(outputs.gen_output.value).address }}"
+      "zip: {{ json(outputs.gen_output.value).zip }}"
