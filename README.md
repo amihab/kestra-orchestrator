@@ -1,3 +1,5 @@
 # Kestra Orchestrator Playground
 
-This repository contains local Kestra implementtion uing Docker and some basic examples.
+This repository contains:
+1. Kestra deployment using Docker.
+2. Basic task examples.
