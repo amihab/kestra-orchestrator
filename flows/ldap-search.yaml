@@ -1,0 +1,27 @@
+id: json_handling
+namespace: kestra.learn
+
+tasks:
+  - id: search
+    type: io.kestra.plugin.ldap.Search
+    userDn: "cn=bind-user-name,ou=City,ou=Region,ou=Users,ou=People,dc=corp,dc=amdocs,dc=com"
+    password: "bind-user-password"
+    baseDn: "dc=corp,dc=amdocs,dc=com"
+    filter: (|(sAMAccountName=user1))
+    attributes:
+      - description
+      - mail
+      - employeeID
+      - displayName
+      - sn
+    hostname: "ldap.server.com"
+    port: "9999"
+  - id: print_search_res
+    type: io.kestra.core.tasks.scripts.Bash
+    commands: 
+      - 'cat "{{ outputs.search.uri }}"'
+      - EMP_ID=`cat "{{ outputs.search.uri }}" | grep employeeID | cut -d':' -f2 | xargs`
+      - echo "EMP_ID=${EMP_ID}"
+  - id: use_ldap_uri
+    type: io.kestra.plugin.core.log.Log
+    message: "{{ outputs.search.uri }}"
